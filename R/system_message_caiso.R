@@ -35,13 +35,17 @@ system_message_caiso <- function(
   resp <- req_perform(req)
 
   # Extract (unzip csv) and load results
-  temp_file <- tempfile() # create temp file
-  writeBin(resp_body_raw(resp), temp_file) # unzip to temp file
-  df <- read_csv(temp_file) # read temporary file
-  file.remove(temp_file) # remove temp file
 
-  # Format
-  df <- df |>
-    arrange(desc(TIMESTAMP))
+  # Extract CSV Format
+  # else return the response
+  if(resultformat == "6") {
+    temp_file <- tempfile() # create temp file
+    writeBin(resp_body_raw(resp), temp_file) # unzip to temp file
+    df <- read_csv(temp_file) # read temporary file
+    file.remove(temp_file) # remove temp file
+    return(df)
+  } else {
+    return(resp)
+  }
 
 }
