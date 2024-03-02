@@ -1,3 +1,24 @@
+#' Get System Messages
+#'
+#' @param from_date A date value defining how far to look back.
+#' @param to_date A date value defining the end date of the look back period.
+#' @param message_severity A character vector defining message type (ALL, Emergency, urgent, Normal).
+#' @param resultformat A character vector defining what type of results to return (csv, xml).
+#' @param base_url A character vector of Oasis api site.
+#' @param tz_hrs_from_gmt A 4 digit character vector defining hours from GMT
+#' @param api_version A character value of API version
+#'
+#' @return A dataframe of system messages
+#' @export
+#'
+#' @examples
+#' df <- system_message_caiso()
+#' df <- system_message_caiso(
+#'   from_date = as.Date("2024-03-01"),
+#'   to_date = as.Date("2024-03-07"),
+#'   message_severity = "Emergency"
+#' )
+
 system_message_caiso <- function(
     from_date = Sys.Date()-14,
     to_date = Sys.Date()+1,
@@ -7,8 +28,9 @@ system_message_caiso <- function(
     tz_hrs_from_gmt = "0700",
     api_version = "1"
 ){
+
   # Check if message severity is correctly defined
-  match.arg(message_severity)
+  message_severity <- match.arg(message_severity)
 
   # Change result format to Oasis encoding
   if(match.arg(resultformat)=="csv"){
@@ -19,38 +41,39 @@ system_message_caiso <- function(
 
   # Format start and end datetime for api
   msg_start_datetime <- paste0(
-    str_remove_all(from_date, pattern = "-"),
+    stringr::str_remove_all(from_date, pattern = "-"),
     "T00:00-",
     tz_hrs_from_gmt
   )
 
   msg_end_datetime <- paste0(
-    str_remove_all(to_date, pattern = "-"),
+    stringr::str_remove_all(to_date, pattern = "-"),
     "T00:00-",
     tz_hrs_from_gmt
   )
 
   # Form api request
-  req <- request(base_url) |>
-    req_url_path_append("SingleZip") |>
-    req_url_query(
+  req <- httr2::request(base_url) |>
+    httr2::req_url_path_append("SingleZip") |>
+    httr2::req_url_query(
       queryname = "ATL_OSM",
       msg_severity = message_severity,
       startdatetime = msg_start_datetime,
       enddatetime = msg_end_datetime,
       version = api_version,
       resultformat = resultformat
-    )
+    ) |>
+    httr2::req_throttle(rate = 10/60) # throttle 10 requests per minute
 
   # Query API
-  resp <- req_perform(req)
+  resp <- httr2::req_perform(req)
 
   # Return results
   if(resultformat == 6) {
     # Extract and load CSV Format
     temp_file <- tempfile() # create temp file
-    writeBin(resp_body_raw(resp), temp_file) # unzip to temp file
-    df <- read_csv(temp_file) # read temporary file
+    writeBin(httr2::resp_body_raw(resp), temp_file) # unzip to temp file
+    df <- readr::read_csv(temp_file) # read temporary file
     file.remove(temp_file) # remove temp file
     return(df)
   } else {
