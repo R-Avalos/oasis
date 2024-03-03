@@ -2,7 +2,7 @@
 % Please edit documentation in R/system_message_caiso.R
 \name{system_message_caiso}
 \alias{system_message_caiso}
-\title{Get System Messages}
+\title{Get CAISO System Messages within a 31 Day Period}
 \usage{
 system_message_caiso(
   from_date = Sys.Date() - 14,
@@ -33,7 +33,7 @@ system_message_caiso(
 A dataframe of system messages
 }
 \description{
-Get System Messages
+Get CAISO System Messages within a 31 Day Period
 }
 \examples{
 df <- system_message_caiso()

@@ -1,4 +1,4 @@
-#' Get System Messages
+#' Get CAISO System Messages within a 31 Day Period
 #'
 #' @param from_date A date value defining how far to look back.
 #' @param to_date A date value defining the end date of the look back period.
@@ -39,6 +39,9 @@ system_message_caiso <- function(
     resultformat = 5
   }
 
+  # Test that number of days is within Oasis API limit
+  if(as.numeric(to_date-from_date) > 30) usethis::ui_stop("Date window exceeds CAISO limit. Messages may be requested for a max window of 31 days")
+
   # Format start and end datetime for api
   msg_start_datetime <- paste0(
     stringr::str_remove_all(from_date, pattern = "-"),
@@ -73,7 +76,21 @@ system_message_caiso <- function(
     # Extract and load CSV Format
     temp_file <- tempfile() # create temp file
     writeBin(httr2::resp_body_raw(resp), temp_file) # unzip to temp file
-    df <- readr::read_csv(temp_file) # read temporary file
+    df <- readr::read_csv(
+      temp_file,
+      col_names = TRUE,
+      col_types = cols(
+        MSG_ID = col_double(),
+        MSG_TIME = col_datetime(format = ""),
+        MSG_TIMESTAMP = col_datetime(format = ""),
+        MSG_SEVERITY = col_character(),
+        MSG_SCID = col_logical(),
+        MSG_TEXT = col_character(),
+        TIMESTAMP = col_datetime(format = ""),
+        MSG_TIME_GMT = col_datetime(format = ""),
+        MSG_TIMESTAMPE_GMT = col_datetime(format = ""),
+        TIMESTAMP_GMT = col_datetime(format = ""))
+      ) # read temporary file
     file.remove(temp_file) # remove temp file
     return(df)
   } else {
