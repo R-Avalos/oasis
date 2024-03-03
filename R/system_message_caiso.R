@@ -1,11 +1,11 @@
-#' Get CAISO System Messages within a 31 Day Period
+#' Get CAISO System Messages
 #'
-#' @param from_date A date value defining how far to look back.
-#' @param to_date A date value defining the end date of the look back period.
-#' @param message_severity A character vector defining message type (ALL, Emergency, urgent, Normal).
-#' @param resultformat A character vector defining what type of results to return (csv, xml).
-#' @param base_url A character vector of Oasis api site.
-#' @param tz_hrs_from_gmt A 4 digit character vector defining hours from GMT
+#' @param from_date A date value defining how far to look back. 31 day window limit.
+#' @param to_date A date value defining the end date of the look back period. 31 day window limit.
+#' @param message_severity A character value defining message type (ALL, Emergency, urgent, Normal).
+#' @param resultformat A character value defining what type of results to return (csv, xml).
+#' @param base_url A character value of Oasis api site.
+#' @param tz_hrs_from_gmt A numeric value of hours from GMT
 #' @param api_version A character value of API version
 #'
 #' @return A dataframe of system messages
@@ -25,35 +25,40 @@ system_message_caiso <- function(
     message_severity = c("ALL", "Emergency", "Urgent", "Normal"),
     resultformat = c("csv", "xml"),
     base_url = "http://oasis.caiso.com/oasisapi",
-    tz_hrs_from_gmt = "0700",
+    tz_hrs_from_gmt = 7,
     api_version = "1"
 ){
-
+  # Input value checks
   # Check if message severity is correctly defined
   message_severity <- match.arg(message_severity)
-
   # Change result format to Oasis encoding
   if(match.arg(resultformat)=="csv"){
     resultformat = 6
   } else {
     resultformat = 5
   }
-
   # Test that number of days is within Oasis API limit
-  if(as.numeric(to_date-from_date) > 30) usethis::ui_stop("Date window exceeds CAISO limit. Messages may be requested for a max window of 31 days")
+  if(as.numeric(to_date-from_date) > 30) usethis::ui_stop("Date window exceeds CAISO limit. CAISO System Messages may be requested for a max window of 31 days")
+  # test date inputs
+  if(lubridate::is.Date(from_date) == FALSE) usethis::ui_stop("Please provide Date value for from_date")
+  if(lubridate::is.Date(to_date) == FALSE) usethis::ui_stop("Please provide Date value for to_date")
+  if(tz_hrs_from_gmt > 23) usethis::ui_stop("TZ hrs from GMT cannot be greater than 23")
 
+
+  # Format TZ hours to Oasis API format
+  tz_hrs_from_gmt <- stringr::str_pad(stringr::str_pad(tz_hrs_from_gmt, width = 2, side = "left", pad = "0"), width = 4, side = "right", pad = "0")
   # Format start and end datetime for api
   msg_start_datetime <- paste0(
     stringr::str_remove_all(from_date, pattern = "-"),
     "T00:00-",
     tz_hrs_from_gmt
   )
-
   msg_end_datetime <- paste0(
     stringr::str_remove_all(to_date, pattern = "-"),
     "T00:00-",
     tz_hrs_from_gmt
   )
+
 
   # Form api request
   req <- httr2::request(base_url) |>
@@ -97,5 +102,4 @@ system_message_caiso <- function(
     # Return XML result buried in response content
     return(resp)
   }
-
 }
