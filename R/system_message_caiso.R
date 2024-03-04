@@ -6,7 +6,7 @@
 #' @param resultformat A character value defining what type of results to return (csv, xml).
 #' @param base_url A character value of Oasis api site.
 #' @param tz_hrs_from_gmt A numeric value of hours from GMT
-#' @param api_version A character value of API version
+#' @param api_version A numeric value of the OASIS API version
 #'
 #' @return A dataframe of system messages
 #' @export
@@ -26,7 +26,7 @@ system_message_caiso <- function(
     resultformat = c("csv", "xml"),
     base_url = "http://oasis.caiso.com/oasisapi",
     tz_hrs_from_gmt = 7,
-    api_version = "1"
+    api_version = 1
 ){
   # Input value checks
   # Check if message severity is correctly defined
@@ -43,7 +43,7 @@ system_message_caiso <- function(
   if(lubridate::is.Date(from_date) == FALSE) usethis::ui_stop("Please provide Date value for from_date")
   if(lubridate::is.Date(to_date) == FALSE) usethis::ui_stop("Please provide Date value for to_date")
   if(tz_hrs_from_gmt > 23) usethis::ui_stop("TZ hrs from GMT cannot be greater than 23")
-
+  if(is.na(as.numeric(api_version))==TRUE) usethis::ui_stop("Non-numeric for OASIS API version provided")
 
   # Format TZ hours to Oasis API format
   tz_hrs_from_gmt <- stringr::str_pad(stringr::str_pad(tz_hrs_from_gmt, width = 2, side = "left", pad = "0"), width = 4, side = "right", pad = "0")
@@ -68,7 +68,7 @@ system_message_caiso <- function(
       msg_severity = message_severity,
       startdatetime = msg_start_datetime,
       enddatetime = msg_end_datetime,
-      version = api_version,
+      version = as.character(api_version),
       resultformat = resultformat
     ) |>
     httr2::req_throttle(rate = 10/60) # throttle 10 requests per minute

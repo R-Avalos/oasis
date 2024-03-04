@@ -2,7 +2,7 @@
 % Please edit documentation in R/system_message_caiso.R
 \name{system_message_caiso}
 \alias{system_message_caiso}
-\title{Get CAISO System Messages within a 31 Day Period}
+\title{Get CAISO System Messages}
 \usage{
 system_message_caiso(
   from_date = Sys.Date() - 14,
@@ -10,30 +10,30 @@ system_message_caiso(
   message_severity = c("ALL", "Emergency", "Urgent", "Normal"),
   resultformat = c("csv", "xml"),
   base_url = "http://oasis.caiso.com/oasisapi",
-  tz_hrs_from_gmt = "0700",
-  api_version = "1"
+  tz_hrs_from_gmt = 7,
+  api_version = 1
 )
 }
 \arguments{
-\item{from_date}{A date value defining how far to look back.}
+\item{from_date}{A date value defining how far to look back. 31 day window limit.}
 
-\item{to_date}{A date value defining the end date of the look back period.}
+\item{to_date}{A date value defining the end date of the look back period. 31 day window limit.}
 
-\item{message_severity}{A character vector defining message type (ALL, Emergency, urgent, Normal).}
+\item{message_severity}{A character value defining message type (ALL, Emergency, urgent, Normal).}
 
-\item{resultformat}{A character vector defining what type of results to return (csv, xml).}
+\item{resultformat}{A character value defining what type of results to return (csv, xml).}
 
-\item{base_url}{A character vector of Oasis api site.}
+\item{base_url}{A character value of Oasis api site.}
 
-\item{tz_hrs_from_gmt}{A 4 digit character vector defining hours from GMT}
+\item{tz_hrs_from_gmt}{A numeric value of hours from GMT}
 
-\item{api_version}{A character value of API version}
+\item{api_version}{A numeric value of the OASIS API version}
 }
 \value{
 A dataframe of system messages
 }
 \description{
-Get CAISO System Messages within a 31 Day Period
+Get CAISO System Messages
 }
 \examples{
 df <- system_message_caiso()
